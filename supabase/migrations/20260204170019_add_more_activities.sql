@@ -4,6 +4,21 @@
 
 BEGIN;
 
+-- Ensure required locations exist (idempotent)
+INSERT INTO locations (id, name, street, city, state, zip, lat, lng, sandbox_mode)
+VALUES
+    ('5a77d2e8-2cbb-4a6a-bfb0-2a1c0f2f9c01', 'Encampment HQ', '2000 Air Base Rd', 'Springfield', 'OH', '45502', 39.9242, -83.8088, true),
+    ('9e2f8a4f-6f49-4c8c-9cdd-1f1b7b021f05', 'STEM & Leadership Lab', '3000 Cadet Way', 'Springfield', 'OH', '45502', 39.9256, -83.8011, true)
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    street = EXCLUDED.street,
+    city = EXCLUDED.city,
+    state = EXCLUDED.state,
+    zip = EXCLUDED.zip,
+    lat = EXCLUDED.lat,
+    lng = EXCLUDED.lng,
+    sandbox_mode = EXCLUDED.sandbox_mode;
+
 INSERT INTO activities (
     id,
     event_id,
