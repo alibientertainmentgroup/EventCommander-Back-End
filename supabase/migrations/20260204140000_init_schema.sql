@@ -3,7 +3,7 @@
 -- ===================================================================
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     cap_id TEXT UNIQUE NOT NULL,
     role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'staff', 'user')),
@@ -12,12 +12,12 @@ CREATE TABLE users (
 );
 
 -- Roles (support roles) table
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     name TEXT PRIMARY KEY
 );
 
 -- Events table (Master events)
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
@@ -34,7 +34,7 @@ CREATE TABLE events (
 );
 
 -- Locations
-CREATE TABLE locations (
+CREATE TABLE IF NOT EXISTS locations (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
     street TEXT,
@@ -48,7 +48,7 @@ CREATE TABLE locations (
 );
 
 -- Activities table (Sub-events within master events)
-CREATE TABLE activities (
+CREATE TABLE IF NOT EXISTS activities (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE activities (
 );
 
 -- Assets table (Vehicles, Equipment, etc.)
-CREATE TABLE assets (
+CREATE TABLE IF NOT EXISTS assets (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
     type TEXT NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE assets (
 );
 
 -- Personnel table (Team members)
-CREATE TABLE personnel (
+CREATE TABLE IF NOT EXISTS personnel (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
     cap_id TEXT NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE personnel (
 );
 
 -- Roster (event sign-in/out + inprocessing)
-CREATE TABLE roster (
+CREATE TABLE IF NOT EXISTS roster (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     cap_id TEXT NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE roster (
 );
 
 -- Logs (notes + audit entries)
-CREATE TABLE logs (
+CREATE TABLE IF NOT EXISTS logs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     type TEXT DEFAULT 'note',
     action TEXT,
@@ -137,7 +137,7 @@ CREATE TABLE logs (
 );
 
 -- Support tickets
-CREATE TABLE support_tickets (
+CREATE TABLE IF NOT EXISTS support_tickets (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     subject TEXT NOT NULL,
     details TEXT NOT NULL,
@@ -157,26 +157,26 @@ CREATE TABLE support_tickets (
 -- CREATE INDEXES FOR PERFORMANCE
 -- ===================================================================
 
-CREATE INDEX idx_events_status ON events(status);
-CREATE INDEX idx_events_created_by ON events(created_by);
-CREATE INDEX idx_events_date_range ON events(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
+CREATE INDEX IF NOT EXISTS idx_events_created_by ON events(created_by);
+CREATE INDEX IF NOT EXISTS idx_events_date_range ON events(start_date, end_date);
 
-CREATE INDEX idx_activities_event_id ON activities(event_id);
-CREATE INDEX idx_activities_column ON activities("column");
-CREATE INDEX idx_activities_date ON activities(activity_date);
+CREATE INDEX IF NOT EXISTS idx_activities_event_id ON activities(event_id);
+CREATE INDEX IF NOT EXISTS idx_activities_column ON activities("column");
+CREATE INDEX IF NOT EXISTS idx_activities_date ON activities(activity_date);
 
-CREATE INDEX idx_assets_status ON assets(status);
-CREATE INDEX idx_assets_type ON assets(type);
+CREATE INDEX IF NOT EXISTS idx_assets_status ON assets(status);
+CREATE INDEX IF NOT EXISTS idx_assets_type ON assets(type);
 
-CREATE INDEX idx_personnel_status ON personnel(status);
-CREATE INDEX idx_personnel_cap_id ON personnel(cap_id);
+CREATE INDEX IF NOT EXISTS idx_personnel_status ON personnel(status);
+CREATE INDEX IF NOT EXISTS idx_personnel_cap_id ON personnel(cap_id);
 
-CREATE INDEX idx_users_cap_id ON users(cap_id);
-CREATE INDEX idx_roster_event_id ON roster(event_id);
-CREATE INDEX idx_roster_cap_id ON roster(cap_id);
-CREATE INDEX idx_logs_type ON logs(type);
-CREATE INDEX idx_logs_created_at ON logs(created_at);
-CREATE INDEX idx_support_status ON support_tickets(status);
+CREATE INDEX IF NOT EXISTS idx_users_cap_id ON users(cap_id);
+CREATE INDEX IF NOT EXISTS idx_roster_event_id ON roster(event_id);
+CREATE INDEX IF NOT EXISTS idx_roster_cap_id ON roster(cap_id);
+CREATE INDEX IF NOT EXISTS idx_logs_type ON logs(type);
+CREATE INDEX IF NOT EXISTS idx_logs_created_at ON logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_support_status ON support_tickets(status);
 
 -- ===================================================================
 -- ENABLE ROW LEVEL SECURITY (RLS)
@@ -198,16 +198,38 @@ ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
 -- ===================================================================
 -- Note: These are permissive policies for simplicity
 
-CREATE POLICY "Allow all operations on users" ON users FOR ALL USING (true);
-CREATE POLICY "Allow all operations on roles" ON roles FOR ALL USING (true);
-CREATE POLICY "Allow all operations on events" ON events FOR ALL USING (true);
-CREATE POLICY "Allow all operations on activities" ON activities FOR ALL USING (true);
-CREATE POLICY "Allow all operations on assets" ON assets FOR ALL USING (true);
-CREATE POLICY "Allow all operations on personnel" ON personnel FOR ALL USING (true);
-CREATE POLICY "Allow all operations on locations" ON locations FOR ALL USING (true);
-CREATE POLICY "Allow all operations on roster" ON roster FOR ALL USING (true);
-CREATE POLICY "Allow all operations on logs" ON logs FOR ALL USING (true);
-CREATE POLICY "Allow all operations on support_tickets" ON support_tickets FOR ALL USING (true);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'users' AND policyname = 'Allow all operations on users') THEN
+        CREATE POLICY "Allow all operations on users" ON users FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'roles' AND policyname = 'Allow all operations on roles') THEN
+        CREATE POLICY "Allow all operations on roles" ON roles FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'events' AND policyname = 'Allow all operations on events') THEN
+        CREATE POLICY "Allow all operations on events" ON events FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'activities' AND policyname = 'Allow all operations on activities') THEN
+        CREATE POLICY "Allow all operations on activities" ON activities FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'assets' AND policyname = 'Allow all operations on assets') THEN
+        CREATE POLICY "Allow all operations on assets" ON assets FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'personnel' AND policyname = 'Allow all operations on personnel') THEN
+        CREATE POLICY "Allow all operations on personnel" ON personnel FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'locations' AND policyname = 'Allow all operations on locations') THEN
+        CREATE POLICY "Allow all operations on locations" ON locations FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'roster' AND policyname = 'Allow all operations on roster') THEN
+        CREATE POLICY "Allow all operations on roster" ON roster FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'logs' AND policyname = 'Allow all operations on logs') THEN
+        CREATE POLICY "Allow all operations on logs" ON logs FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'support_tickets' AND policyname = 'Allow all operations on support_tickets') THEN
+        CREATE POLICY "Allow all operations on support_tickets" ON support_tickets FOR ALL USING (true);
+    END IF;
+END $$;
 
 -- ===================================================================
 -- INSERT BASE ROLES
