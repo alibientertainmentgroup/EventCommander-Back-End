@@ -61,7 +61,8 @@ CREATE TABLE locations (
     zip TEXT,
     lat DOUBLE PRECISION,
     lng DOUBLE PRECISION,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sandbox_mode BOOLEAN DEFAULT FALSE
 );
 
 -- Activities table (Sub-events within master events)
@@ -79,7 +80,8 @@ CREATE TABLE activities (
     assets_required JSONB DEFAULT '[]'::jsonb,
     assigned_personnel JSONB DEFAULT '[]'::jsonb,
     assigned_assets JSONB DEFAULT '[]'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sandbox_mode BOOLEAN DEFAULT FALSE
 );
 
 -- Assets table (Vehicles, Equipment, etc.)
@@ -93,7 +95,8 @@ CREATE TABLE assets (
     assigned_to TEXT,
     assigned_personnel JSONB DEFAULT '[]'::jsonb,
     availability JSONB DEFAULT '[]'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sandbox_mode BOOLEAN DEFAULT FALSE
 );
 
 -- Personnel table (Team members)
@@ -106,7 +109,8 @@ CREATE TABLE personnel (
     status TEXT DEFAULT 'available' CHECK (status IN ('available', 'assigned')),
     assigned_to TEXT,
     availability JSONB DEFAULT '[]'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sandbox_mode BOOLEAN DEFAULT FALSE
 );
 
 -- Roster (event sign-in/out + inprocessing)
@@ -125,7 +129,8 @@ CREATE TABLE roster (
     stations JSONB DEFAULT '{}'::jsonb,
     flags JSONB DEFAULT '[]'::jsonb,
     profile JSONB DEFAULT '{}'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sandbox_mode BOOLEAN DEFAULT FALSE
 );
 
 -- Logs (notes + audit entries)
@@ -145,7 +150,8 @@ CREATE TABLE logs (
     actor_rank TEXT,
     actor_role TEXT,
     message TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sandbox_mode BOOLEAN DEFAULT FALSE
 );
 
 -- Support tickets
@@ -161,7 +167,8 @@ CREATE TABLE support_tickets (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     closed_at TIMESTAMPTZ,
     closed_by TEXT,
-    closed_remarks TEXT
+    closed_remarks TEXT,
+    sandbox_mode BOOLEAN DEFAULT FALSE
 );
 
 -- ===================================================================
