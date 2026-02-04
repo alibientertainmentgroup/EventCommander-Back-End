@@ -43,6 +43,7 @@ CREATE TABLE events (
     end_date DATE,
     personnel_needed INTEGER DEFAULT 0,
     assets_needed INTEGER DEFAULT 0,
+    sandbox_mode BOOLEAN DEFAULT FALSE,
     status TEXT DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'active', 'completed')),
     created_by TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
