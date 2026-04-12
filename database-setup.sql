@@ -11,6 +11,8 @@ DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS roster CASCADE;
 DROP TABLE IF EXISTS locations CASCADE;
 DROP TABLE IF EXISTS personnel CASCADE;
+DROP TABLE IF EXISTS inprocessing_checkins CASCADE;
+DROP TABLE IF EXISTS inprocessing_stations CASCADE;
 DROP TABLE IF EXISTS assets CASCADE;
 DROP TABLE IF EXISTS activities CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
@@ -113,6 +115,29 @@ CREATE TABLE personnel (
     sandbox_mode BOOLEAN DEFAULT FALSE
 );
 
+-- Inprocessing Stations table
+CREATE TABLE inprocessing_stations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT,
+    station_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Inprocessing Check-ins table
+CREATE TABLE inprocessing_checkins (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    station_id UUID REFERENCES inprocessing_stations(id) ON DELETE CASCADE,
+    personnel_id TEXT NOT NULL,
+    checked_in_at TIMESTAMPTZ DEFAULT NOW(),
+    checked_in_by TEXT
+);
+
+CREATE INDEX idx_stations_event ON inprocessing_stations(event_id);
+CREATE INDEX idx_checkins_station ON inprocessing_checkins(station_id);
+
+
 -- Roster (event sign-in/out + inprocessing)
 CREATE TABLE roster (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -210,6 +235,8 @@ ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE roster ENABLE ROW LEVEL SECURITY;
 ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inprocessing_stations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inprocessing_checkins ENABLE ROW LEVEL SECURITY;
 
 -- ===================================================================
 -- CREATE SECURITY POLICIES
@@ -226,6 +253,9 @@ CREATE POLICY "Allow all operations on locations" ON locations FOR ALL USING (tr
 CREATE POLICY "Allow all operations on roster" ON roster FOR ALL USING (true);
 CREATE POLICY "Allow all operations on logs" ON logs FOR ALL USING (true);
 CREATE POLICY "Allow all operations on support_tickets" ON support_tickets FOR ALL USING (true);
+
+CREATE POLICY "Allow all on stations" ON inprocessing_stations FOR ALL USING (true);
+CREATE POLICY "Allow all on checkins" ON inprocessing_checkins FOR ALL USING (true);
 
 -- ===================================================================
 -- INSERT BASE ROLES
