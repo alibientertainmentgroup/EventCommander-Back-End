@@ -17,6 +17,9 @@ DROP TABLE IF EXISTS assets CASCADE;
 DROP TABLE IF EXISTS activities CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS event_roster CASCADE;
+DROP TABLE IF EXISTS event_accommodations CASCADE;
+DROP TABLE IF EXISTS event_allergies CASCADE;
 
 -- ===================================================================
 -- CREATE TABLES
@@ -137,6 +140,74 @@ CREATE TABLE inprocessing_checkins (
 CREATE INDEX idx_stations_event ON inprocessing_stations(event_id);
 CREATE INDEX idx_checkins_station ON inprocessing_checkins(station_id);
 
+-- Event-specific uploads
+CREATE TABLE event_roster (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    cap_id TEXT NOT NULL,
+    rank TEXT,
+    region TEXT,
+    wing TEXT,
+    unit TEXT,
+    gender TEXT,
+    dob TEXT,
+    age INTEGER,
+    shirt_size TEXT,
+    member_type TEXT,
+    expiration TEXT,
+    member_status TEXT,
+    home_phone TEXT,
+    cell_phone TEXT,
+    emergency_contact_name TEXT,
+    emergency_contact_phone TEXT,
+    email TEXT,
+    unit_approved TEXT,
+    parent_approved TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE event_accommodations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    cap_id TEXT NOT NULL,
+    full_name TEXT,
+    member_type TEXT,
+    accommodation_type TEXT,
+    temporary TEXT,
+    start_date TEXT,
+    end_date TEXT,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE event_allergies (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    cap_id TEXT NOT NULL,
+    is_anaphyaxis TEXT,
+    has_epipen TEXT,
+    has_albuterol_inhaler TEXT,
+    full_name TEXT,
+    allergy_name TEXT,
+    allergy_type TEXT,
+    typical_reactions TEXT,
+    treatments TEXT,
+    contact_name TEXT,
+    emergency_contact TEXT,
+    commander_name TEXT,
+    commander_contact TEXT,
+    other_medications TEXT,
+    other_reactions TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_roster_event ON event_roster(event_id);
+CREATE INDEX idx_roster_capid ON event_roster(cap_id);
+CREATE INDEX idx_accommodations_event ON event_accommodations(event_id);
+CREATE INDEX idx_accommodations_capid ON event_accommodations(cap_id);
+CREATE INDEX idx_allergies_event ON event_allergies(event_id);
+CREATE INDEX idx_allergies_capid ON event_allergies(cap_id);
+
 
 -- Roster (event sign-in/out + inprocessing)
 CREATE TABLE roster (
@@ -237,6 +308,9 @@ ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inprocessing_stations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inprocessing_checkins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_roster ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_accommodations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_allergies ENABLE ROW LEVEL SECURITY;
 
 -- ===================================================================
 -- CREATE SECURITY POLICIES
@@ -256,6 +330,9 @@ CREATE POLICY "Allow all operations on support_tickets" ON support_tickets FOR A
 
 CREATE POLICY "Allow all on stations" ON inprocessing_stations FOR ALL USING (true);
 CREATE POLICY "Allow all on checkins" ON inprocessing_checkins FOR ALL USING (true);
+CREATE POLICY "Allow all on roster" ON event_roster FOR ALL USING (true);
+CREATE POLICY "Allow all on accommodations" ON event_accommodations FOR ALL USING (true);
+CREATE POLICY "Allow all on allergies" ON event_allergies FOR ALL USING (true);
 
 -- ===================================================================
 -- INSERT BASE ROLES
