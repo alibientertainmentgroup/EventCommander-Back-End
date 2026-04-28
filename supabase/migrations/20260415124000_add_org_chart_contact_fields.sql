@@ -1,0 +1,4 @@
+ALTER TABLE public.org_chart_positions
+ADD COLUMN IF NOT EXISTS callsign TEXT,
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS email TEXT;
